@@ -35,12 +35,22 @@ void PID::Init(double Kp_, double Ki_, double Kd_) {
 }
 
 void PID::UpdateError(const double cte, const double dt) {
+	// compute updated errors
 	d_error = (cte - p_error)/dt;
 	i_error += cte*dt;
 	p_error = cte;
 }
 
-double PID::TotalError() {
+double PID::TotalError(const double saturation_max, const double saturation_min) {
+	// compute control signal
+	double control_signal = -Kp*p_error - Kd*d_error - Ki* i_error;
+	// avoid exceeding saturation
+	if (control_signal > saturation_max)
+		control_signal = saturation_max;
+	else if (control_signal < saturation_min)
+		control_signal = saturation_min;
+
+	return control_signal;
 }
 
 

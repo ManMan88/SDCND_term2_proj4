@@ -40,7 +40,7 @@ public:
   /*
   * Calculate the total PID error.
   */
-  double TotalError();
+  double TotalError(const double saturation_max, const double saturation_min);
 };
 
 #endif /* PID_H */
