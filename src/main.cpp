@@ -5,6 +5,10 @@
 #include <math.h>
 #include <chrono>
 
+// define saturation values
+#define SAT_MAX 1.0
+#define SAT_MIN -1.0
+
 // for convenience
 using json = nlohmann::json;
 using namespace std::chrono;
@@ -72,7 +76,10 @@ int main()
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
-          
+          // update errors
+          steer_pid.UpdateError(cte,dt);
+          // compute control signal
+          steer_value = steer_pid.TotalError(SAT_MAX,SAT_MIN);
 
 
           // update last sample time
