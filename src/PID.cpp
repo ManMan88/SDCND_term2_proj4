@@ -1,3 +1,4 @@
+#include <iostream>
 #include "PID.h"
 
 using namespace std;
@@ -21,7 +22,7 @@ PID::PID() {
 
 PID::~PID() {}
 
-void PID::Init(double Kp_, double Ki_, double Kd_) {
+void PID::Init(double Kp_, double Kd_, double Ki_) {
 	//set the PID hyper parameters
 	Kp = Kp_;
 	Ki = Ki_;
@@ -39,10 +40,15 @@ void PID::UpdateError(const double cte, const double dt) {
 	d_error = (cte - p_error)/dt;
 	i_error += cte*dt;
 	p_error = cte;
+
+	//cout << "p_error\t" << p_error << "\td_error\t" << d_error << "\ti_error" << i_error << endl;
 }
 
 double PID::TotalError(const double saturation_max, const double saturation_min) {
 	// compute control signal
+
+	//cout << "p_signal\t" << -Kp*p_error << "\td_signal\t" << - Kd*d_error << "\ti_signal" << - Ki* i_error << endl;
+
 	double control_signal = -Kp*p_error - Kd*d_error - Ki* i_error;
 	// avoid exceeding saturation
 	if (control_signal > saturation_max)

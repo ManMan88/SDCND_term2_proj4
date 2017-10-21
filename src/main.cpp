@@ -45,7 +45,7 @@ int main()
   uWS::Hub h;
 
   PID steer_pid;
-  steer_pid.Init(1.0,0.1,0.1);
+  steer_pid.Init(0.05,0.02,0.001);
   t_last = high_resolution_clock::now();
 
   h.onMessage([&steer_pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
@@ -67,8 +67,8 @@ int main()
           // acquire data
           // j[1] is the data JSON object
           double cte = std::stod(j[1]["cte"].get<std::string>());
-          double speed = std::stod(j[1]["speed"].get<std::string>());
-          double angle = std::stod(j[1]["steering_angle"].get<std::string>());
+          //double speed = std::stod(j[1]["speed"].get<std::string>());
+          //double angle = std::stod(j[1]["steering_angle"].get<std::string>());
           double steer_value;
           /*
           * TODO: Calcuate steering value here, remember the steering value is
@@ -86,7 +86,7 @@ int main()
           t_last = t_new;
 
           // DEBUG
-          std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
+          std::cout << "CTE: " << cte << " Steering Value: " << steer_value << " delta t is: " << dt << std::endl << std::endl;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
