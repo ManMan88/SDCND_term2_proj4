@@ -2,6 +2,7 @@
 #include <iostream>
 #include "json.hpp"
 #include "PID.h"
+#include "twiddle.h"
 #include <math.h>
 #include <chrono>
 
@@ -47,6 +48,8 @@ int main()
   PID steer_pid;
   steer_pid.Init(0.05,0.02,0.001);
   t_last = high_resolution_clock::now();
+
+  Twiddle twiddle;
 
   h.onMessage([&steer_pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.

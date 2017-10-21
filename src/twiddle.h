@@ -47,7 +47,7 @@ public:
 
 private:
   //State ENUM
-  enum State_Options {init, start, increased_Kp, decreased_Kp, increased_Kd, decreased_Kd, increased_Ki, decreased_Ki};
+  enum State_Options {init_t, start_t, increased_Kp, decreased_Kp, increased_Kd, decreased_Kd, increased_Ki, decreased_Ki};
   State_Options state;
 };
 
