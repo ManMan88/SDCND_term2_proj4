@@ -3,14 +3,22 @@
 #include "json.hpp"
 #include "PID.h"
 #include <math.h>
+#include <chrono>
 
 // for convenience
 using json = nlohmann::json;
+using namespace std::chrono;
 
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
+
+// define timing variables
+high_resolution_clock::time_point t_last;
+high_resolution_clock::time_point t_new;
+duration<double> delta_t;
+
 
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
@@ -32,10 +40,11 @@ int main()
 {
   uWS::Hub h;
 
-  PID pid;
-  // TODO: Initialize the pid variable.
+  PID steer_pid;
+  steer_pid.Init(1.0,0.1,0.1);
+  t_last = high_resolution_clock::now();
 
-  h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&steer_pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -47,6 +56,11 @@ int main()
         std::string event = j[0].get<std::string>();
         if (event == "telemetry") {
           // j[1] is the data JSON object
+          // compute delta time
+          t_new = high_resolution_clock::now();
+          delta_t = duration_cast<duration<double>>(t_new - t_last);
+
+          // acquire data
           double cte = std::stod(j[1]["cte"].get<std::string>());
           double speed = std::stod(j[1]["speed"].get<std::string>());
           double angle = std::stod(j[1]["steering_angle"].get<std::string>());
@@ -58,6 +72,8 @@ int main()
           * another PID controller to control the speed!
           */
           
+
+
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
 

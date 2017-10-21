@@ -34,7 +34,10 @@ void PID::Init(double Kp, double Ki, double Kd) {
 	return;
 }
 
-void PID::UpdateError(double cte) {
+void PID::UpdateError(const double cte, const double dt) {
+	d_error = (cte - p_error)/dt;
+	i_error += cte*dt;
+	p_error = cte;
 }
 
 double PID::TotalError() {
