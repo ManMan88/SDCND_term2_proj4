@@ -42,7 +42,7 @@ public:
   /*
   * The state machine determines what the twiddle will do next.
   */
-  void StateMachine();
+  void StateMachine(const double error);
 
 
 private:
