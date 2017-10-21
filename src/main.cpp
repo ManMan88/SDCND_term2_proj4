@@ -55,12 +55,13 @@ int main()
         auto j = json::parse(s);
         std::string event = j[0].get<std::string>();
         if (event == "telemetry") {
-          // j[1] is the data JSON object
           // compute delta time
           t_new = high_resolution_clock::now();
           delta_t = duration_cast<duration<double>>(t_new - t_last);
+          double dt = delta_t.count();
 
           // acquire data
+          // j[1] is the data JSON object
           double cte = std::stod(j[1]["cte"].get<std::string>());
           double speed = std::stod(j[1]["speed"].get<std::string>());
           double angle = std::stod(j[1]["steering_angle"].get<std::string>());
@@ -73,6 +74,9 @@ int main()
           */
           
 
+
+          // update last sample time
+          t_last = t_new;
 
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
