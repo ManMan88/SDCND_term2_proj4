@@ -83,7 +83,9 @@ int main()
   vel_pid.Init(0.04,0.02,0.0005);
 
   PID steer_pid;
-  steer_pid.Init(0.0822805,0.0571301,0.00442457);
+  //steer_pid.Init(0.0822805,0.0571301,0.00442457);
+  steer_pid.Init(0.0985533,0.063,0.0049725);
+
   t_last = high_resolution_clock::now();
 
   h.onMessage([&steer_pid,&vel_pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
