@@ -9,6 +9,19 @@
 #define SAT_MAX 1.0
 #define SAT_MIN -1.0
 
+// define max & min velocity
+#define VEL_MAX 100
+#define VEL_MIN 10
+
+// define factor parameters to determine speed
+#define CTE_MAX 7
+#define STEER_MAX 0.8
+#define ANGLE_MAX 18
+
+// speed filter
+#define ALPHA 0.2
+
+
 // for convenience
 using json = nlohmann::json;
 using namespace std::chrono;
@@ -17,6 +30,28 @@ using namespace std::chrono;
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
+
+/*
+** HELPER FUNCTION
+** Determine the speed target based on the cte, angle steer_value and last speed
+*/
+double determine_speed(const double cte, const double angle, const double steer_value, const double speed) {
+  // factor the
+  double factor = 1 - fabs(cte/CTE_MAX);
+  factor *= (1 - fabs(angle/ANGLE_MAX));
+  factor *= (1 - fabs(steer_value/STEER_MAX));
+  // set the target speed
+  double target_speed = VEL_MAX * factor;
+
+  // apply simple filter
+  target_speed = target_speed*ALPHA + speed*(1-ALPHA);
+
+  // check that the speed is not too small
+  if (target_speed < VEL_MIN)
+    target_speed = VEL_MIN;
+
+  return target_speed;
+}
 
 // define timing variables
 high_resolution_clock::time_point t_last;
@@ -44,11 +79,14 @@ int main()
 {
   uWS::Hub h;
 
+  PID vel_pid;
+  vel_pid.Init(0.04,0.02,0.0005);
+
   PID steer_pid;
   steer_pid.Init(0.0822805,0.0571301,0.00442457);
   t_last = high_resolution_clock::now();
 
-  h.onMessage([&steer_pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&steer_pid,&vel_pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -67,9 +105,8 @@ int main()
           // acquire data
           // j[1] is the data JSON object
           double cte = std::stod(j[1]["cte"].get<std::string>());
-          //double speed = std::stod(j[1]["speed"].get<std::string>());
-          //double angle = std::stod(j[1]["steering_angle"].get<std::string>());
-          double steer_value;
+          double speed = std::stod(j[1]["speed"].get<std::string>());
+          double angle = std::stod(j[1]["steering_angle"].get<std::string>());
           /*
           * TODO: Calcuate steering value here, remember the steering value is
           * [-1, 1].
@@ -79,20 +116,30 @@ int main()
           // update errors
           steer_pid.UpdateError(cte,dt);
           // compute control signal
-          steer_value = steer_pid.TotalError(SAT_MAX,SAT_MIN);
+          double steer_value = steer_pid.TotalError(SAT_MAX,SAT_MIN);
 
+          //determine desired velocity
+          double target_speed = determine_speed(cte,angle,steer_value,speed);
+
+          // update velocity error
+          vel_pid.UpdateError(speed-target_speed,dt);
+          // compute control signal
+          double throttle_value = vel_pid.TotalError(SAT_MAX,SAT_MIN);
+
+          //DEBUG
+          //std::cout << "target_speed is: " << target_speed << " speed error is: " << speed-target_speed << " throttle is: " << throttle_value << std::endl;
 
           // update last sample time
           t_last = t_new;
 
           // DEBUG
-          std::cout << "CTE: " << cte << " Steering Value: " << steer_value << " delta t is: " << dt << std::endl << std::endl;
+          //std::cout << "CTE: " << cte << " Steering Value: " << steer_value << " Angle is: " << angle <<" delta t is: " << dt << std::endl << std::endl;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.3;
+          msgJson["throttle"] = throttle_value;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+          //std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
